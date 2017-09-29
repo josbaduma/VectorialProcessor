@@ -5,36 +5,56 @@
  */
 package com.architecture.projects.stages;
 
-import com.architecture.projects.components.VectorRegisters;
+import com.architecture.projects.components.InstructionMemory;
+import com.architecture.projects.utilities.Utility;
+import java.util.Observable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author jose
  */
-public class FetchStage implements Runnable {
+public class FetchStage extends Observable implements Runnable {
     
     private Thread t;
     private final String threadName;
     private String instructionFetched = "";
+    private String pc;
+
+    public String getPC() {
+        return pc;
+    }
+    private static FetchStage instance;
 
     public FetchStage() {
 
         threadName = "InstructionFetchStage";
+        pc = "0000000000000000";
     }
+    
+    public static FetchStage getInstance() {
+        if (instance == null) {
+            instance = new FetchStage();            
+        }
+        return instance;
+    }
+    
     @Override
     public void run() {
-        VectorRegisters register = VectorRegisters.getInstance();
-        //String address = register.readAddress("1111");
-        //InstructionMemory instructionMemory = InstructionMemory.getInstance();
+        InstructionMemory instructionMemory = InstructionMemory.getInstance();
 
-        //String instruction = instructionMemory.readInstruction(address);
-        //instructionFetched = instruction;
+        String instruction = instructionMemory.readInstruction(pc);
+        instructionFetched = instruction;
 
-        //int number0 = Integer.parseInt(address, 2);
-        //int number1 = Integer.parseInt("1", 2);
+        int number0 = Utility.binaryToDecimal(pc);
+        int number1 = Utility.binaryToDecimal("1000");
 
-        //int sum = number0 + number1;
-        //register.writeAddress("1111", Integer.toBinaryString(sum));
+        int sum = number0 + number1;
+        pc = Utility.decimalToBinary(sum);
+        
+        this.setChanged();
+        this.notifyObservers();
     }
     
     /**
@@ -54,10 +74,15 @@ public class FetchStage implements Runnable {
      * @return
      * @throws InterruptedException
      */
-    public String getInstructionFetched() throws InterruptedException {
-        Thread.sleep(1);
-        System.out.println("output fetch " + instructionFetched);
-
+    public String getInstructionFetched() {
+        try {
+            Thread.sleep(1);
+            System.out.println("output fetch " + instructionFetched);
+            
+            return instructionFetched;
+        } catch (InterruptedException ex) {
+            Logger.getLogger(FetchStage.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return instructionFetched;
     }
     

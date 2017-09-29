@@ -5,6 +5,8 @@
  */
 package com.architecture.projects;
 
+import com.architecture.projects.stages.FetchStage;
+
 /**
  *
  * @author jose
@@ -15,7 +17,9 @@ public class VectorProcessor {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        
+        FetchStage fetch = FetchStage.getInstance();
+        fetch.start();
+        fetch.getInstructionFetched();
     }
     
 }
