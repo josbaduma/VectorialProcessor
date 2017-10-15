@@ -37,32 +37,82 @@ public class Main extends javax.swing.JFrame implements Observer {
 
         pcLabel = new javax.swing.JLabel();
         pcValue = new javax.swing.JLabel();
+        toolBar = new javax.swing.JToolBar();
+        playButton = new javax.swing.JButton();
+        stepButton = new javax.swing.JButton();
+        restartButton = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTextPane1 = new javax.swing.JTextPane();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        jMenu1 = new javax.swing.JMenu();
+        jMenu2 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Vector Processor");
+        setMaximumSize(new java.awt.Dimension(1366, 742));
+        setMinimumSize(new java.awt.Dimension(1366, 742));
+        setPreferredSize(new java.awt.Dimension(1366, 714));
 
         pcLabel.setText("PC");
 
         pcValue.setText("0000000000000000");
 
+        toolBar.setFloatable(false);
+        toolBar.setRollover(true);
+
+        playButton.setText("Play");
+        playButton.setFocusable(false);
+        playButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        playButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolBar.add(playButton);
+
+        stepButton.setText("Step");
+        stepButton.setFocusable(false);
+        stepButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        stepButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolBar.add(stepButton);
+
+        restartButton.setText("Restart");
+        restartButton.setFocusable(false);
+        restartButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        restartButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        toolBar.add(restartButton);
+
+        jScrollPane1.setViewportView(jTextPane1);
+
+        jMenu1.setText("File");
+        jMenuBar1.add(jMenu1);
+
+        jMenu2.setText("Edit");
+        jMenuBar1.add(jMenu2);
+
+        setJMenuBar(jMenuBar1);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(toolBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(242, Short.MAX_VALUE)
-                .addComponent(pcLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(pcValue)
+                .addContainerGap(1023, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 268, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(pcLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(pcValue)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(279, Short.MAX_VALUE)
+                .addComponent(toolBar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 640, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(pcLabel)
-                    .addComponent(pcValue))
-                .addContainerGap())
+                    .addComponent(pcValue)))
         );
 
         pack();
@@ -111,7 +161,16 @@ public class Main extends javax.swing.JFrame implements Observer {
     //Internal vector processor variables
     private FetchStage fetch;
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
+    private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTextPane jTextPane1;
     private javax.swing.JLabel pcLabel;
     private javax.swing.JLabel pcValue;
+    private javax.swing.JButton playButton;
+    private javax.swing.JButton restartButton;
+    private javax.swing.JButton stepButton;
+    private javax.swing.JToolBar toolBar;
     // End of variables declaration//GEN-END:variables
 }

@@ -42,6 +42,7 @@ public class FetchStage extends Observable implements Runnable {
     
     @Override
     public void run() {
+        long startTime = System.nanoTime();
         InstructionMemory instructionMemory = InstructionMemory.getInstance();
 
         String instruction = instructionMemory.readInstruction(pc);
@@ -53,8 +54,18 @@ public class FetchStage extends Observable implements Runnable {
         int sum = number0 + number1;
         pc = Utility.decimalToBinary(sum);
         
-        this.setChanged();
-        this.notifyObservers();
+        //this.setChanged();
+        //this.notifyObservers();
+        
+        long endTime   = System.nanoTime();
+        long totalTime = (endTime - startTime)/1000;
+        System.out.println("Tiempo ejecución Fetch: "+totalTime);
+        
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(FetchStage.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     /**
@@ -65,24 +76,18 @@ public class FetchStage extends Observable implements Runnable {
         if (t == null) {
             t = new Thread(this, threadName);
             t.start();
+        } else {
+            t.start();
         }
     }
 
     /**
-     * Se retorna el resultado de la instruccion (el fetch)
+     * Se retorna el resultado de la instruccion
      *
      * @return
-     * @throws InterruptedException
      */
     public String getInstructionFetched() {
-        try {
-            Thread.sleep(1);
-            System.out.println("output fetch " + instructionFetched);
-            
-            return instructionFetched;
-        } catch (InterruptedException ex) {
-            Logger.getLogger(FetchStage.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        System.out.println("Instruction Fetched: "+instructionFetched);
         return instructionFetched;
     }
     
