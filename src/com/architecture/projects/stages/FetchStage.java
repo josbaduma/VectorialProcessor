@@ -25,7 +25,7 @@ public class FetchStage extends Observable implements Runnable {
     private final String threadName;
     private String instructionFetched = "";
     private String pc;
-    private InstructionMemory instructionMemory;
+    private final InstructionMemory instructionMemory;
 
     public String getPC() {
         return pc;

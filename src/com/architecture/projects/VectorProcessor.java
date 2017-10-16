@@ -30,8 +30,7 @@ public class VectorProcessor {
         ExecutionStage execute = ExecutionStage.getInstance();
         MemoryStage memory = MemoryStage.getInstance();
         WriteBackStage writeBack = WriteBackStage.getInstance();
-        fetch.start();
-        
+        fetch.start();        
     }
     
 }
