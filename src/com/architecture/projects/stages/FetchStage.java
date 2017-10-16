@@ -1,81 +1,88 @@
-/*********************************************/
-/*  Instituto Tecnológico de Costa Rica      */
-/*  Ingeniería en Computadores               */
-/*  Arquitectura de Computadores II          */
-/*  II Semestre 2017                         */
-/*                                           */
-/*  Author: José Daniel Badilla Umaña        */
-/*  Carné: 201271708                         */
-/*********************************************/
+/**********************************************/
+/*  Instituto Tecnológico de Costa Rica       */
+/*  Ingeniería en Computadores                */
+/*  Arquitectura de Computadores II           */
+/*  II Semestre 2017                          */
+/*                                            */
+/*  Author: José Daniel Badilla Umaña         */
+/*  Carné: 201271708                          */
+/**********************************************/
 package com.architecture.projects.stages;
 
+import com.architecture.projects.components.Clock;
 import com.architecture.projects.components.InstructionMemory;
 import com.architecture.projects.utilities.Utility;
 import java.util.Observable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Observer;
 
 /**
  *
  * @author jose
  */
-public class FetchStage extends Observable implements Runnable {
-    
+public class FetchStage extends Observable implements Observer, Runnable {
+
     private Thread t;
     private final String threadName;
     private String instructionFetched = "";
     private String pc;
     private final InstructionMemory instructionMemory;
     private static FetchStage instance;
+    private final Clock clockInstance;
+    private boolean clock;
+    private final int numInstruction;
+    private int countInstruction;
 
     public FetchStage() {
 
         threadName = "InstructionFetchStage";
         pc = "0000000000000000";
         instructionFetched = "00000000000000000000000000000000";
-        
-         instructionMemory = InstructionMemory.getInstance();
+        clockInstance = Clock.getInstance();
+        clockInstance.addObserver(this);
+        clock = false;
+        instructionMemory = InstructionMemory.getInstance();
+        numInstruction = instructionMemory.getInstructions().size();
+        countInstruction = 0;
     }
+
     /**
      * Se obtiene el PC actual
-     * @return 
+     *
+     * @return
      */
     public String getPC() {
         return pc;
     }
-    
+
     public static FetchStage getInstance() {
         if (instance == null) {
-            instance = new FetchStage();            
+            instance = new FetchStage();
         }
         return instance;
     }
-    
+
     @Override
     public void run() {
-        long startTime = System.nanoTime();
+        while (countInstruction < numInstruction) {
+            if(clock){
+                long startTime = System.nanoTime();
 
-        instructionFetched = instructionMemory.readInstruction(pc);
+                instructionFetched = instructionMemory.readInstruction(pc);
 
-        int number0 = Utility.binaryToDecimal(pc);
+                int number0 = Utility.binaryToDecimal(pc);
 
-        int sum = number0 + 1;
-        pc = Utility.decimalToBinary(sum);
-        
-        long endTime   = System.nanoTime();
-        long totalTime = (endTime - startTime)/1000;
-        System.out.println("Tiempo ejecución Fetch: "+totalTime+" us");
-        
-        this.setChanged();
-        this.notifyObservers();
-               
-        try {
-            Thread.sleep(10);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(FetchStage.class.getName()).log(Level.SEVERE, null, ex);
+                int sum = number0 + 1;
+                pc = Utility.decimalToBinary(sum);
+                
+                countInstruction++;
+
+                long endTime = System.nanoTime();
+                long totalTime = (endTime - startTime) / 1000;
+                System.out.println("Tiempo ejecución Fetch: " + totalTime + " us");
+            }
         }
     }
-    
+
     /**
      * Punto de entrada del thread.
      */
@@ -83,8 +90,6 @@ public class FetchStage extends Observable implements Runnable {
 
         if (t == null) {
             t = new Thread(this, threadName);
-            t.start();
-        } else {
             t.start();
         }
     }
@@ -95,8 +100,13 @@ public class FetchStage extends Observable implements Runnable {
      * @return
      */
     public String getInstructionFetched() {
-        System.out.println("Instruction Fetched: "+instructionFetched);
+        System.out.println("Instruction Fetched: " + instructionFetched);
         return instructionFetched;
     }
-    
+
+    @Override
+    public void update(Observable o, Object arg) {
+        this.clock = clockInstance.isClock();
+    }
+
 }

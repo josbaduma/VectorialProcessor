@@ -9,6 +9,7 @@
 /*********************************************/
 package com.architecture.projects.stages;
 
+import com.architecture.projects.components.Clock;
 import com.architecture.projects.components.ScalarRegisters;
 import com.architecture.projects.components.VectorRegisters;
 import com.architecture.projects.utilities.Utility;
@@ -40,10 +41,17 @@ public class DecodeStage extends Observable implements Runnable, Observer {
     private String scalarSource2;
     private String inmediate;
     
+    private final Clock clockInstance;
+    private boolean clock;
+    
     public DecodeStage() {
         fetch = FetchStage.getInstance();
-        fetch.addObserver(this);
         threadName = "DecodeStage";
+        
+        clockInstance = Clock.getInstance();
+        clockInstance.addObserver(this);
+        clock = false;
+        
         instruction = fetch.getInstructionFetched();
         vectorRegs = VectorRegisters.getInstance();
         scalarRegs = ScalarRegisters.getInstance();
@@ -58,29 +66,30 @@ public class DecodeStage extends Observable implements Runnable, Observer {
 
     @Override
     public void run() {
-        long startTime = System.nanoTime();
-        opType = instruction.substring(0, 3);
-        type = instruction.substring(3, 6);
-        opCode = instruction.substring(6, 8);
-        
-        destiny = instruction.substring(8, 12);
-        String regS1 = instruction.substring(12, 16);
-        String regS2 = instruction.substring(16, 20);
-        
-        inmediate = instruction.substring(16, 32);
-        
-        vectorSource1 = vectorRegs.readAddress(regS1);
-        vectorSource2 = vectorRegs.readAddress(regS2);
-        
-        scalarSource1 = scalarRegs.readAddress(regS1);
-        scalarSource2 = scalarRegs.readAddress(regS2);
-        
-        long endTime   = System.nanoTime();
-        long totalTime = (endTime - startTime)/1000;
-        System.out.println("Tiempo ejecución Decode: "+totalTime+" us");
-        
-        this.setChanged();
-        this.notifyObservers();            
+        while(true){
+            if(clock){
+                long startTime = System.nanoTime();
+                opType = instruction.substring(0, 3);
+                type = instruction.substring(3, 6);
+                opCode = instruction.substring(6, 8);
+
+                destiny = instruction.substring(8, 12);
+                String regS1 = instruction.substring(12, 16);
+                String regS2 = instruction.substring(16, 20);
+
+                inmediate = instruction.substring(16, 32);
+
+                vectorSource1 = vectorRegs.readAddress(regS1);
+                vectorSource2 = vectorRegs.readAddress(regS2);
+
+                scalarSource1 = scalarRegs.readAddress(regS1);
+                scalarSource2 = scalarRegs.readAddress(regS2);
+
+                long endTime   = System.nanoTime();
+                long totalTime = (endTime - startTime)/1000;
+                System.out.println("Tiempo ejecución Decode: "+totalTime+" us");
+            }
+        }
     }
     
     /**
@@ -90,8 +99,6 @@ public class DecodeStage extends Observable implements Runnable, Observer {
 
         if (t == null) {
             t = new Thread(this, threadName);
-            t.start();
-        } else {
             t.start();
         }
     }
@@ -134,8 +141,7 @@ public class DecodeStage extends Observable implements Runnable, Observer {
 
     @Override
     public void update(Observable o, Object arg) {
+        this.clock = clockInstance.isClock();
         this.instruction = fetch.getInstructionFetched();
-        
-        this.start();
     }
 }

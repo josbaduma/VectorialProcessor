@@ -9,6 +9,7 @@
 /*********************************************/
 package com.architecture.projects.stages;
 
+import com.architecture.projects.components.Clock;
 import com.architecture.projects.components.DataMemory;
 import com.architecture.projects.utilities.Utility;
 import java.util.Observable;
@@ -21,10 +22,13 @@ import java.util.Observer;
 public class MemoryStage extends Observable implements Runnable, Observer {
     
     private static MemoryStage instance;
-    private final ExecutionStage execution;
+    private ExecutionStage execution;
     private final DataMemory dataMem;
     private Thread t;
     private final String threadName;
+    
+    private final Clock clockInstance;
+    private boolean clock;
     
     private String opType;
     private String opCode;
@@ -36,6 +40,10 @@ public class MemoryStage extends Observable implements Runnable, Observer {
     public MemoryStage() {
         this.threadName = "MemoryStage";
         this.dataMem = DataMemory.getInstance();
+        execution = ExecutionStage.getInstance();
+        clockInstance = Clock.getInstance();
+        clockInstance.addObserver(this);
+        clock = false;
         
         this.opType = "000";
         this.opCode = "000";
@@ -61,52 +69,53 @@ public class MemoryStage extends Observable implements Runnable, Observer {
         if (t == null) {
             t = new Thread(this, threadName);
             t.start();
-        } else  {
-            t.start();
         }
     }
 
     @Override
     public void run() {
-        long startTime = System.nanoTime();
-        
-        if(this.opType.compareTo("010") == 0){
-            if(this.opCode.compareTo("001") == 0) {
-                int tempDest = Utility.binaryToDecimal(destiny);
-                this.dataMem.writeMemory(Utility.decimalToBinary(tempDest), resultVector[0]);
-                this.dataMem.writeMemory(Utility.decimalToBinary(tempDest+1), resultVector[1]);
-                this.dataMem.writeMemory(Utility.decimalToBinary(tempDest+2), resultVector[2]);
-                this.dataMem.writeMemory(Utility.decimalToBinary(tempDest+3), resultVector[3]);
-                this.dataMem.writeMemory(Utility.decimalToBinary(tempDest+4), resultVector[4]);
-                this.dataMem.writeMemory(Utility.decimalToBinary(tempDest+5), resultVector[5]);
-                this.dataMem.writeMemory(Utility.decimalToBinary(tempDest+6), resultVector[6]);
-                this.dataMem.writeMemory(Utility.decimalToBinary(tempDest+7), resultVector[7]);
-            } else if(this.opCode.compareTo("011") == 0){
-                this.dataMem.writeMemory(destiny, resultScalar);
-            } else if(this.opCode.compareTo("000") == 0){
-                int tempDest = Utility.binaryToDecimal(destiny);
-                resultVector[0] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest));
-                resultVector[1] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest+1));
-                resultVector[2] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest+2));
-                resultVector[3] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest+3));
-                resultVector[4] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest+4));
-                resultVector[5] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest+5));
-                resultVector[6] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest+6));
-                resultVector[7] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest+7));
-            } else if(this.opCode.compareTo("010") == 0){
-                resultScalar = this.dataMem.readMemory(destiny);
+        while(true) {
+            if(clock) {
+                long startTime = System.nanoTime();
+
+                if(this.opType.compareTo("010") == 0){
+                    if(this.opCode.compareTo("001") == 0) {
+                        int tempDest = Utility.binaryToDecimal(destiny);
+                        this.dataMem.writeMemory(Utility.decimalToBinary(tempDest), resultVector[0]);
+                        this.dataMem.writeMemory(Utility.decimalToBinary(tempDest+1), resultVector[1]);
+                        this.dataMem.writeMemory(Utility.decimalToBinary(tempDest+2), resultVector[2]);
+                        this.dataMem.writeMemory(Utility.decimalToBinary(tempDest+3), resultVector[3]);
+                        this.dataMem.writeMemory(Utility.decimalToBinary(tempDest+4), resultVector[4]);
+                        this.dataMem.writeMemory(Utility.decimalToBinary(tempDest+5), resultVector[5]);
+                        this.dataMem.writeMemory(Utility.decimalToBinary(tempDest+6), resultVector[6]);
+                        this.dataMem.writeMemory(Utility.decimalToBinary(tempDest+7), resultVector[7]);
+                    } else if(this.opCode.compareTo("011") == 0){
+                        this.dataMem.writeMemory(destiny, resultScalar);
+                    } else if(this.opCode.compareTo("000") == 0){
+                        int tempDest = Utility.binaryToDecimal(destiny);
+                        resultVector[0] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest));
+                        resultVector[1] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest+1));
+                        resultVector[2] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest+2));
+                        resultVector[3] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest+3));
+                        resultVector[4] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest+4));
+                        resultVector[5] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest+5));
+                        resultVector[6] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest+6));
+                        resultVector[7] = this.dataMem.readMemory(Utility.decimalToBinary(tempDest+7));
+                    } else if(this.opCode.compareTo("010") == 0){
+                        resultScalar = this.dataMem.readMemory(destiny);
+                    }
+                }        
+                long endTime   = System.nanoTime();
+                long totalTime = (endTime - startTime)/1000;
+                System.out.println("Tiempo ejecución Memory: "+totalTime+" us");
             }
-        }        
-        long endTime   = System.nanoTime();
-        long totalTime = (endTime - startTime)/1000;
-        System.out.println("Tiempo ejecución Memory: "+totalTime+" us");
-        
-        this.setChanged();
-        this.notifyObservers(); 
+        }
     }
 
     @Override
     public void update(Observable o, Object arg) {
+        this.clock = clockInstance.isClock();
+        
         this.opType = execution.getOpType();
         this.opCode = execution.getOpCode();
         this.destiny = execution.getDestiny();
