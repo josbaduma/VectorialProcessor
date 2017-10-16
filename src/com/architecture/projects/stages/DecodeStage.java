@@ -1,11 +1,11 @@
-/********************************************/
-/*Instituto Tecnológico de Costa Rica             */
-/*Ingeniería en Computadores                         */
-/*Arquitectura de Computadores II                  */
-/*II Semestre 2017                                             */
-/*                                                                           */
-/*Author: José Daniel Badilla Umaña                 */
-/*Carné: 201271708                                          */
+/*********************************************/
+/*  Instituto Tecnológico de Costa Rica      */
+/*  Ingeniería en Computadores               */
+/*  Arquitectura de Computadores II          */
+/*  II Semestre 2017                         */
+/*                                           */
+/*  Author: José Daniel Badilla Umaña        */
+/*  Carné: 201271708                         */
 /*********************************************/
 package com.architecture.projects.stages;
 
@@ -58,6 +58,7 @@ public class DecodeStage extends Observable implements Runnable, Observer {
 
     @Override
     public void run() {
+        long startTime = System.nanoTime();
         opType = instruction.substring(0, 3);
         type = instruction.substring(3, 6);
         opCode = instruction.substring(6, 8);
@@ -74,8 +75,12 @@ public class DecodeStage extends Observable implements Runnable, Observer {
         scalarSource1 = scalarRegs.readAddress(regS1);
         scalarSource2 = scalarRegs.readAddress(regS2);
         
+        long endTime   = System.nanoTime();
+        long totalTime = (endTime - startTime)/1000;
+        System.out.println("Tiempo ejecución Decode: "+totalTime+" us");
+        
         this.setChanged();
-        this.notifyObservers();    
+        this.notifyObservers();            
     }
     
     /**

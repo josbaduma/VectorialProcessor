@@ -1,8 +1,12 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+/*********************************************/
+/*  Instituto Tecnológico de Costa Rica      */
+/*  Ingeniería en Computadores               */
+/*  Arquitectura de Computadores II          */
+/*  II Semestre 2017                         */
+/*                                           */
+/*  Author: José Daniel Badilla Umaña        */
+/*  Carné: 201271708                         */
+/*********************************************/
 package com.architecture.projects.stages;
 
 import com.architecture.projects.components.InstructionMemory;
@@ -21,6 +25,7 @@ public class FetchStage extends Observable implements Runnable {
     private final String threadName;
     private String instructionFetched = "";
     private String pc;
+    private InstructionMemory instructionMemory;
 
     public String getPC() {
         return pc;
@@ -31,6 +36,9 @@ public class FetchStage extends Observable implements Runnable {
 
         threadName = "InstructionFetchStage";
         pc = "0000000000000000";
+        instructionFetched = "00000000000000000000000000000000";
+        
+         instructionMemory = InstructionMemory.getInstance();
     }
     
     public static FetchStage getInstance() {
@@ -43,24 +51,21 @@ public class FetchStage extends Observable implements Runnable {
     @Override
     public void run() {
         long startTime = System.nanoTime();
-        InstructionMemory instructionMemory = InstructionMemory.getInstance();
 
-        String instruction = instructionMemory.readInstruction(pc);
-        instructionFetched = instruction;
+        instructionFetched = instructionMemory.readInstruction(pc);
 
         int number0 = Utility.binaryToDecimal(pc);
-        int number1 = Utility.binaryToDecimal("1000");
 
-        int sum = number0 + number1;
+        int sum = number0 + 1;
         pc = Utility.decimalToBinary(sum);
-        
-        //this.setChanged();
-        //this.notifyObservers();
         
         long endTime   = System.nanoTime();
         long totalTime = (endTime - startTime)/1000;
-        System.out.println("Tiempo ejecución Fetch: "+totalTime);
+        System.out.println("Tiempo ejecución Fetch: "+totalTime+" us");
         
+        this.setChanged();
+        this.notifyObservers();
+               
         try {
             Thread.sleep(10);
         } catch (InterruptedException ex) {
