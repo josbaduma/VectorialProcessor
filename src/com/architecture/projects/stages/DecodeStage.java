@@ -55,6 +55,24 @@ public class DecodeStage extends Observable implements Runnable, Observer {
         instruction = fetch.getInstructionFetched();
         vectorRegs = VectorRegisters.getInstance();
         scalarRegs = ScalarRegisters.getInstance();
+        
+        opType = "000";
+        opCode = "000";
+        type = "00";
+        
+        destiny = "0000";
+        vectorSource1 = new String[8];
+        vectorSource2 = new String[8];
+        
+        for(int i=0; i<8; i++) {
+            vectorSource1[i] = "00000000";
+            vectorSource2[i] = "00000000";
+        }
+        
+        scalarSource1 = "00000000000000000000000000000000";
+        scalarSource2 = "00000000000000000000000000000000";
+        
+        inmediate = "0000000000000000";
     }
     
     public static DecodeStage getInstance() {
