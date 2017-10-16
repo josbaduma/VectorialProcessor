@@ -100,6 +100,9 @@ public class MemoryStage extends Observable implements Runnable, Observer {
         long endTime   = System.nanoTime();
         long totalTime = (endTime - startTime)/1000;
         System.out.println("Tiempo ejecución Memory: "+totalTime+" us");
+        
+        this.setChanged();
+        this.notifyObservers(); 
     }
 
     @Override

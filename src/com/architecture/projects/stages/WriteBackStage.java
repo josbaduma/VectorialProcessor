@@ -33,9 +33,10 @@ public class WriteBackStage extends Observable implements Runnable, Observer {
     private String resultScalar;
 
     public WriteBackStage() {
-        this.threadName = "WriteBackStage";
+        this.threadName = "WriteBackStage";        
         this.scalarReg = ScalarRegisters.getInstance();
         this.vectorReg = VectorRegisters.getInstance();
+        
         this.memStage = MemoryStage.getInstance();
         this.memStage.addObserver(this);
 

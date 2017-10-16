@@ -26,10 +26,6 @@ public class FetchStage extends Observable implements Runnable {
     private String instructionFetched = "";
     private String pc;
     private final InstructionMemory instructionMemory;
-
-    public String getPC() {
-        return pc;
-    }
     private static FetchStage instance;
 
     public FetchStage() {
@@ -39,6 +35,13 @@ public class FetchStage extends Observable implements Runnable {
         instructionFetched = "00000000000000000000000000000000";
         
          instructionMemory = InstructionMemory.getInstance();
+    }
+    /**
+     * Se obtiene el PC actual
+     * @return 
+     */
+    public String getPC() {
+        return pc;
     }
     
     public static FetchStage getInstance() {
