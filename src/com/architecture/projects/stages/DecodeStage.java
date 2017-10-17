@@ -52,7 +52,6 @@ public class DecodeStage extends Observable implements Runnable, Observer {
         clockInstance.addObserver(this);
         clock = false;
         
-        instruction = fetch.getInstructionFetched();
         vectorRegs = VectorRegisters.getInstance();
         scalarRegs = ScalarRegisters.getInstance();
         

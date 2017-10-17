@@ -55,7 +55,6 @@ public class MemoryStage extends Observable implements Runnable, Observer {
             this.resultVector[i] = "00000000";
         }
         this.execution = ExecutionStage.getInstance();
-        this.execution.addObserver(this);
     }
     
     public static MemoryStage getInstance() {
@@ -122,8 +121,6 @@ public class MemoryStage extends Observable implements Runnable, Observer {
         
         this.resultScalar = execution.getResultScalar();
         this.resultVector = execution.getResultVector();
-        
-        this.start();
     }
 
     public String getOpType() {

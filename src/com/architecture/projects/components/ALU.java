@@ -27,8 +27,9 @@ public class ALU {
     }
 
     /**
-     * Realiza las operaciones en la ALU segun el Optype y Opcode
-     * de los operandos asignados.
+     * Realiza las operaciones en la ALU segun el Optype y Opcode de los
+     * operandos asignados.
+     *
      * @param opType tipo de operacion
      * @param opCode codigo de la operacion
      * @param valueA primer operando
@@ -76,7 +77,14 @@ public class ALU {
                     this.result = Utility.decimalToBinary(Utility.binaryToDecimal(valueA) | Utility.binaryToDecimal(valueB));
                     break;
                 case "010":
-                    this.result = valueA.charAt(valueA.length() - 1) + valueA.substring(0, valueA.length() - 1);
+                    for (int i = 0; i < Utility.binaryToDecimal(immediate); i++) {
+                        this.result = valueA.substring(1) + valueA.charAt(0);
+                    }
+                    break;
+                case "011":
+                    for (int i = 0; i < Utility.binaryToDecimal(immediate); i++) {
+                        this.result = valueA.charAt(valueA.length() - 1) + valueA.substring(0, valueA.length() - 1);
+                    }
                     break;
             }
         }

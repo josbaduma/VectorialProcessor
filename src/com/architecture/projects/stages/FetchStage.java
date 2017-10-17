@@ -99,8 +99,7 @@ public class FetchStage extends Observable implements Observer, Runnable {
      *
      * @return
      */
-    public String getInstructionFetched() {
-        System.out.println("Instruction Fetched: " + instructionFetched);
+    public String getInstructionFetched() {        
         return instructionFetched;
     }
 

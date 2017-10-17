@@ -5,8 +5,17 @@
  */
 package com.architecture.projects.gui;
 
+import com.architecture.projects.components.DataMemory;
+import com.architecture.projects.components.InstructionMemory;
+import com.architecture.projects.components.ScalarRegisters;
+import com.architecture.projects.components.VectorRegisters;
+import com.architecture.projects.stages.DecodeStage;
+import com.architecture.projects.stages.ExecutionStage;
 import com.architecture.projects.stages.FetchStage;
+import com.architecture.projects.stages.MemoryStage;
+import com.architecture.projects.stages.WriteBackStage;
 import com.architecture.projects.utilities.Utility;
+import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -16,13 +25,34 @@ import java.util.Observer;
  */
 public class Main extends javax.swing.JFrame implements Observer {
 
+    
+
     /**
      * Creates new form Main
      */
     public Main() {
         fetch = FetchStage.getInstance();
         fetch.addObserver(this);
-        fetch.start();
+        
+        decode = DecodeStage.getInstance();
+        decode.addObserver(this);
+        
+        execute = ExecutionStage.getInstance();
+        execute.addObserver(this);
+        
+        memory = MemoryStage.getInstance();
+        memory.addObserver(this);
+        
+        writeBack = WriteBackStage.getInstance();
+        writeBack.addObserver(this);
+        
+        vectorReg = VectorRegisters.getInstance();
+        scalarReg = ScalarRegisters.getInstance();
+        mem = DataMemory.getInstance();
+        memInst = InstructionMemory.getInstance();
+        memInst.addObserver(this);
+        instructions = memInst.getInstructions();
+        
         initComponents();
     }
 
@@ -43,9 +73,22 @@ public class Main extends javax.swing.JFrame implements Observer {
         restartButton = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTextPane1 = new javax.swing.JTextPane();
+        tabPane = new javax.swing.JTabbedPane();
+        jLabel1 = new javax.swing.JLabel();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        memInstructionText = new javax.swing.JTextArea();
+        jScrollPane5 = new javax.swing.JScrollPane();
+        memDataText = new javax.swing.JTextArea();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        regVectorText = new javax.swing.JTextArea();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        regScalarText = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
-        jMenu2 = new javax.swing.JMenu();
+        imagentem = new javax.swing.JMenuItem();
+        codigoItem = new javax.swing.JMenuItem();
+        limpiarItem = new javax.swing.JMenuItem();
+        salirItem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Vector Processor");
@@ -78,13 +121,59 @@ public class Main extends javax.swing.JFrame implements Observer {
         restartButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         toolBar.add(restartButton);
 
+        jTextPane1.setMaximumSize(new java.awt.Dimension(270, 640));
+        jTextPane1.setMinimumSize(new java.awt.Dimension(270, 640));
         jScrollPane1.setViewportView(jTextPane1);
 
-        jMenu1.setText("File");
-        jMenuBar1.add(jMenu1);
+        tabPane.setPreferredSize(new java.awt.Dimension(1080, 640));
 
-        jMenu2.setText("Edit");
-        jMenuBar1.add(jMenu2);
+        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/architecture/projects/gui/PipelineVector - Page 1.jpeg"))); // NOI18N
+        tabPane.addTab("Micro Arquitectura", jLabel1);
+
+        memInstructionText.setColumns(20);
+        memInstructionText.setRows(5);
+        jScrollPane4.setViewportView(memInstructionText);
+
+        tabPane.addTab("Memoria de Instrucciones", jScrollPane4);
+
+        memDataText.setColumns(20);
+        memDataText.setRows(5);
+        jScrollPane5.setViewportView(memDataText);
+
+        tabPane.addTab("Memoria de Datos", jScrollPane5);
+
+        regVectorText.setColumns(20);
+        regVectorText.setRows(5);
+        jScrollPane2.setViewportView(regVectorText);
+
+        tabPane.addTab("Registros Vectoriales", jScrollPane2);
+
+        regScalarText.setColumns(20);
+        regScalarText.setRows(5);
+        jScrollPane3.setViewportView(regScalarText);
+
+        tabPane.addTab("Registros Escalares", jScrollPane3);
+
+        jMenu1.setText("Archivo");
+
+        imagentem.setText("Cargar Imagen");
+        jMenu1.add(imagentem);
+
+        codigoItem.setText("Cargar Código");
+        codigoItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                codigoItemActionPerformed(evt);
+            }
+        });
+        jMenu1.add(codigoItem);
+
+        limpiarItem.setText("Limpiar Procesador");
+        jMenu1.add(limpiarItem);
+
+        salirItem.setText("Salir");
+        jMenu1.add(salirItem);
+
+        jMenuBar1.add(jMenu1);
 
         setJMenuBar(jMenuBar1);
 
@@ -94,29 +183,43 @@ public class Main extends javax.swing.JFrame implements Observer {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(toolBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(1023, Short.MAX_VALUE)
+                .addContainerGap()
+                .addComponent(tabPane, javax.swing.GroupLayout.PREFERRED_SIZE, 1080, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 268, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addGroup(layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
                         .addComponent(pcLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(pcValue)))
-                .addContainerGap())
+                        .addComponent(pcValue)
+                        .addGap(124, 124, 124))
+                    .addGroup(layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 270, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addComponent(toolBar, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 640, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(pcLabel)
-                    .addComponent(pcValue)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 640, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(pcLabel)
+                            .addComponent(pcValue))
+                        .addGap(0, 10, Short.MAX_VALUE))
+                    .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void codigoItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_codigoItemActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_codigoItemActionPerformed
 
     /**
      * @param args the command line arguments
@@ -146,31 +249,60 @@ public class Main extends javax.swing.JFrame implements Observer {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new Main().setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            new Main().setVisible(true);
         });
     }
 
     @Override
     public void update(Observable o, Object arg) {
         this.pcValue.setText(Utility.zeroExtends(this.fetch.getPC(), 16));
+        
+        String instructionText = "";
+        for(int i=0; i<this.instructions.size(); i++) {
+            instructionText = instructionText + this.instructions.get(i) +"\n";
+        }
+        this.memInstructionText.setText(instructionText);
+                
     }
 
     //Internal vector processor variables
-    private FetchStage fetch;
+    private final FetchStage fetch;
+    private DecodeStage decode;
+    private ExecutionStage execute;
+    private MemoryStage memory;
+    private WriteBackStage writeBack;
+    
+    private DataMemory mem;
+    private final InstructionMemory memInst;
+    private final ArrayList<String> instructions;
+    private VectorRegisters vectorReg;
+    private ScalarRegisters scalarReg;
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenuItem codigoItem;
+    private javax.swing.JMenuItem imagentem;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JTextPane jTextPane1;
+    private javax.swing.JMenuItem limpiarItem;
+    private javax.swing.JTextArea memDataText;
+    private javax.swing.JTextArea memInstructionText;
     private javax.swing.JLabel pcLabel;
     private javax.swing.JLabel pcValue;
     private javax.swing.JButton playButton;
+    private javax.swing.JTextArea regScalarText;
+    private javax.swing.JTextArea regVectorText;
     private javax.swing.JButton restartButton;
+    private javax.swing.JMenuItem salirItem;
     private javax.swing.JButton stepButton;
+    private javax.swing.JTabbedPane tabPane;
     private javax.swing.JToolBar toolBar;
     // End of variables declaration//GEN-END:variables
 }

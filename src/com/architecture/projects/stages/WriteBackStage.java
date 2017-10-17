@@ -46,7 +46,6 @@ public class WriteBackStage extends Observable implements Runnable, Observer {
         clock = false;
 
         this.memStage = MemoryStage.getInstance();
-        this.memStage.addObserver(this);
 
         this.opCode = "000";
         this.encode = "000";

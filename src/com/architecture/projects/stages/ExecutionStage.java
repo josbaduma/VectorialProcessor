@@ -41,7 +41,7 @@ public class ExecutionStage extends Observable implements Runnable, Observer {
     private String[] vectorA, vectorB;
     private final String[] resultVector;
     private String scalarA, scalarB;
-    private final String resultScalar;
+    private String resultScalar;
     private String immediate;
     private final Clock clockInstance;
     private boolean clock;
@@ -105,36 +105,37 @@ public class ExecutionStage extends Observable implements Runnable, Observer {
                 long startTime = System.nanoTime();
                 switch (type) {
                     case "00":
-                        alu1.operation(opType, opCode, vectorA[0], vectorB[0], immediate);
-                        alu2.operation(opType, opCode, vectorA[1], vectorB[1], immediate);
-                        alu3.operation(opType, opCode, vectorA[2], vectorB[2], immediate);
-                        alu4.operation(opType, opCode, vectorA[3], vectorB[3], immediate);
-                        alu5.operation(opType, opCode, vectorA[4], vectorB[4], immediate);
-                        alu6.operation(opType, opCode, vectorA[5], vectorB[5], immediate);
-                        alu7.operation(opType, opCode, vectorA[6], vectorB[6], immediate);
-                        alu8.operation(opType, opCode, vectorA[7], vectorB[7], immediate);
+                        resultVector[0] = alu1.operation(opType, opCode, vectorA[0], vectorB[0], immediate);
+                        resultVector[1] = alu2.operation(opType, opCode, vectorA[1], vectorB[1], immediate);
+                        resultVector[2] = alu3.operation(opType, opCode, vectorA[2], vectorB[2], immediate);
+                        resultVector[3] = alu4.operation(opType, opCode, vectorA[3], vectorB[3], immediate);
+                        resultVector[4] = alu5.operation(opType, opCode, vectorA[4], vectorB[4], immediate);
+                        resultVector[5] = alu6.operation(opType, opCode, vectorA[5], vectorB[5], immediate);
+                        resultVector[6] = alu7.operation(opType, opCode, vectorA[6], vectorB[6], immediate);
+                        resultVector[7] = alu8.operation(opType, opCode, vectorA[7], vectorB[7], immediate);
                         break;
                     case "01":
-                        alu1.operation(opType, opCode, vectorA[0], scalarB, immediate);
-                        alu2.operation(opType, opCode, vectorA[1], scalarB, immediate);
-                        alu3.operation(opType, opCode, vectorA[2], scalarB, immediate);
-                        alu4.operation(opType, opCode, vectorA[3], scalarB, immediate);
-                        alu5.operation(opType, opCode, vectorA[4], scalarB, immediate);
-                        alu6.operation(opType, opCode, vectorA[5], scalarB, immediate);
-                        alu7.operation(opType, opCode, vectorA[6], scalarB, immediate);
-                        alu8.operation(opType, opCode, vectorA[7], scalarB, immediate);
+                        resultVector[0] = alu1.operation(opType, opCode, vectorA[0], scalarB, immediate);
+                        resultVector[1] = alu2.operation(opType, opCode, vectorA[1], scalarB, immediate);
+                        resultVector[2] = alu3.operation(opType, opCode, vectorA[2], scalarB, immediate);
+                        resultVector[3] = alu4.operation(opType, opCode, vectorA[3], scalarB, immediate);
+                        resultVector[4] = alu5.operation(opType, opCode, vectorA[4], scalarB, immediate);
+                        resultVector[5] = alu6.operation(opType, opCode, vectorA[5], scalarB, immediate);
+                        resultVector[6] = alu7.operation(opType, opCode, vectorA[6], scalarB, immediate);
+                        resultVector[7] = alu8.operation(opType, opCode, vectorA[7], scalarB, immediate);
                         break;
                     case "10":
-                        alu1.operation(opType, opCode, scalarA, vectorB[0], immediate);
-                        alu2.operation(opType, opCode, scalarA, vectorB[1], immediate);
-                        alu3.operation(opType, opCode, scalarA, vectorB[2], immediate);
-                        alu4.operation(opType, opCode, scalarA, vectorB[3], immediate);
-                        alu5.operation(opType, opCode, scalarA, vectorB[4], immediate);
-                        alu6.operation(opType, opCode, scalarA, vectorB[5], immediate);
-                        alu7.operation(opType, opCode, scalarA, vectorB[6], immediate);
-                        alu8.operation(opType, opCode, scalarA, vectorB[7], immediate);
+                        resultVector[0] = alu1.operation(opType, opCode, scalarA, vectorB[0], immediate);
+                        resultVector[1] = alu2.operation(opType, opCode, scalarA, vectorB[1], immediate);
+                        resultVector[2] = alu3.operation(opType, opCode, scalarA, vectorB[2], immediate);
+                        resultVector[3] = alu4.operation(opType, opCode, scalarA, vectorB[3], immediate);
+                        resultVector[4] = alu5.operation(opType, opCode, scalarA, vectorB[4], immediate);
+                        resultVector[5] = alu6.operation(opType, opCode, scalarA, vectorB[5], immediate);
+                        resultVector[6] = alu7.operation(opType, opCode, scalarA, vectorB[6], immediate);
+                        resultVector[7] = alu8.operation(opType, opCode, scalarA, vectorB[7], immediate);
                         break;
                 }
+                resultScalar = resultVector[0];
                 long endTime = System.nanoTime();
                 long totalTime = (endTime - startTime) / 1000;
                 System.out.println("Tiempo ejecución Execution: " + totalTime + " us");
@@ -158,8 +159,6 @@ public class ExecutionStage extends Observable implements Runnable, Observer {
 
         this.immediate = decode.getInmediate();
         this.destiny = decode.getDestiny();
-
-        this.start();
     }
 
     public String getOpType() {
