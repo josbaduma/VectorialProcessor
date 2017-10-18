@@ -7,12 +7,13 @@ package com.architecture.projects.components;
 
 import com.architecture.projects.utilities.Utility;
 import java.util.ArrayList;
+import java.util.Observable;
 
 /**
  *
  * @author jose
  */
-public class DataMemory {
+public class DataMemory extends Observable {
     
      private final ArrayList<String> dataMemory;
     private static DataMemory instance = null;
@@ -21,7 +22,7 @@ public class DataMemory {
     public DataMemory() {
 
         dataMemory = new ArrayList();
-                for (int i = 0; i < 65536; i++) {
+                for (int i = 0; i < 16384; i++) {
             dataMemory.add("00000000");
         }
     }
@@ -57,18 +58,24 @@ public class DataMemory {
      *
      * @param address the address to write, expected in binary
      * @param data the data to write, expected in binary
-     * @param enable boolean to enable or not enable the write.
      */
     public void writeMemory(String address, String data) {
-
-
-
         int index = Utility.binaryToDecimal(address);
         dataMemory.set(index, data);
+        setChanged();
+        notifyObservers();
     }
 
     public ArrayList<String> getDataMemory() {
         return dataMemory;
+    }
+    
+    public void setDataMemory(String[] array){
+        for(int i=0; i<array.length; i++){
+            dataMemory.set(i, array[i]);
+        }
+        setChanged();
+        notifyObservers();
     }
     
 }

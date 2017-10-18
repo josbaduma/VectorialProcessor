@@ -9,12 +9,14 @@
 /*********************************************/
 package com.architecture.projects.stages;
 
-import com.architecture.projects.components.Clock;
+import com.architecture.projects.components.InstructionMemory;
 import com.architecture.projects.components.ScalarRegisters;
 import com.architecture.projects.components.VectorRegisters;
 import com.architecture.projects.utilities.Utility;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -41,37 +43,25 @@ public class DecodeStage extends Observable implements Runnable, Observer {
     private String scalarSource2;
     private String inmediate;
     
-    private final Clock clockInstance;
+    private final InstructionMemory instructionMemory;
+    private int numInstruction;
+    private int countInstruction;
     private boolean clock;
     
     public DecodeStage() {
         fetch = FetchStage.getInstance();
+        fetch.addObserver(this);
         threadName = "DecodeStage";
-        
-        clockInstance = Clock.getInstance();
-        clockInstance.addObserver(this);
-        clock = false;
+        instructionMemory = InstructionMemory.getInstance();
+        numInstruction = 10;
+
         
         vectorRegs = VectorRegisters.getInstance();
         scalarRegs = ScalarRegisters.getInstance();
-        
-        opType = "000";
-        opCode = "000";
-        type = "00";
-        
-        destiny = "0000";
+
         vectorSource1 = new String[8];
         vectorSource2 = new String[8];
-        
-        for(int i=0; i<8; i++) {
-            vectorSource1[i] = "00000000";
-            vectorSource2[i] = "00000000";
-        }
-        
-        scalarSource1 = "00000000000000000000000000000000";
-        scalarSource2 = "00000000000000000000000000000000";
-        
-        inmediate = "0000000000000000";
+
     }
     
     public static DecodeStage getInstance() {
@@ -83,12 +73,19 @@ public class DecodeStage extends Observable implements Runnable, Observer {
 
     @Override
     public void run() {
-        while(true){
+
+        while(countInstruction < numInstruction){
+            try {
+                synchronized (this) {
+                    this.wait();
+                }
+            } catch (InterruptedException ie) {
+            }
             if(clock){
-                long startTime = System.nanoTime();
+                
                 opType = instruction.substring(0, 3);
-                type = instruction.substring(3, 6);
-                opCode = instruction.substring(6, 8);
+                opCode = instruction.substring(3, 6);
+                type = instruction.substring(6, 8);
 
                 destiny = instruction.substring(8, 12);
                 String regS1 = instruction.substring(12, 16);
@@ -102,9 +99,17 @@ public class DecodeStage extends Observable implements Runnable, Observer {
                 scalarSource1 = scalarRegs.readAddress(regS1);
                 scalarSource2 = scalarRegs.readAddress(regS2);
 
-                long endTime   = System.nanoTime();
-                long totalTime = (endTime - startTime)/1000;
-                System.out.println("Tiempo ejecución Decode: "+totalTime+" us");
+                countInstruction++;
+                clock = false;
+                System.out.println("Decode output: Optype" + opType + " Opcode " + opCode + " type " + type + " destiny "+ destiny);
+                try {
+                    Thread.sleep(95);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(DecodeStage.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                
+                setChanged();
+                notifyObservers();
             }
         }
     }
@@ -112,12 +117,29 @@ public class DecodeStage extends Observable implements Runnable, Observer {
     /**
      * Punto de entrada del thread.
      */
-    public void start() {
+    public void start(int numInst) {
+        countInstruction = 0;
+        numInstruction = numInst;
+        clock = false;
 
-        if (t == null) {
-            t = new Thread(this, threadName);
-            t.start();
+        opType = "000";
+        opCode = "000";
+        type = "00";
+
+        destiny = "0000";
+
+        for (int i = 0; i < 8; i++) {
+            vectorSource1[i] = "00000000";
+            vectorSource2[i] = "00000000";
         }
+
+        scalarSource1 = "00000000000000000000000000000000";
+        scalarSource2 = "00000000000000000000000000000000";
+
+        inmediate = "0000000000000000";
+        t = new Thread(this, threadName);
+        t.start();
+        
     }
     
         public String getOpType() {
@@ -158,7 +180,11 @@ public class DecodeStage extends Observable implements Runnable, Observer {
 
     @Override
     public void update(Observable o, Object arg) {
-        this.clock = clockInstance.isClock();
         this.instruction = fetch.getInstructionFetched();
+        this.clock = true;
+        synchronized(this)
+        {
+            this.notify();
+        }
     }
 }

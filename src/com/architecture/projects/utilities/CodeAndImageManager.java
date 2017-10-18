@@ -11,10 +11,6 @@ package com.architecture.projects.utilities;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
 
 /**
  *
@@ -25,21 +21,14 @@ public class CodeAndImageManager {
     private BufferedImage imageActual;
     private File file;
 
-    public void getImage(String Path) {
-        file = new File(Path);
-        try {
-            imageActual = ImageIO.read(file);
-        } catch (IOException ex) {
-            Logger.getLogger(CodeAndImageManager.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    public void getImage(BufferedImage image) {
 
-        if (imageActual != null) {
-            System.out.println("Se cargo correctamente.");
-        }
+        imageActual = image;
+
     }
 
     public String[] getPixelToMemory() {
-        String[] returnValue = null;
+        String[] returnValue;
 
         int width, height, memSize;
         width = imageActual.getWidth();
@@ -61,7 +50,7 @@ public class CodeAndImageManager {
     
     public String getAlgorithXOR(int key) {
         int size = imageActual.getWidth() * imageActual.getHeight();
-        String code = "MOVS R2, "+key;
+        String code = "MOVS R2, "+key+"\n";
         
         if((size % 8) == 0){
             for(int i=0; i < size/8; i++){
@@ -75,17 +64,29 @@ public class CodeAndImageManager {
         return code;
     }
     
-    public String getAlgorithSHIFT(String dir) {
+    public String getAlgorithSHIFT(String dir, int shamt) {
         int size = imageActual.getWidth() * imageActual.getHeight();
         String code = "";
         
         if((size % 8) == 0){
             for(int i=0; i < size/8; i++){
-                code += "MOVS R1, "+i+"\nLV R2, R1\nNOP\nXORVS R3, R2, R2\nSV R3, R1\n";
+                String shift;
+                if(dir.compareTo("derecha") == 0) {
+                    shift = "SHIFTCR";
+                }else {
+                    shift = "SHIFTCL";
+                }
+                code += "MOVS R1, "+i+"\nLV R2, R1\nNOP\n"+shift+" R3, "+shamt+"(R2)\nSV R3, R1\n";
             }
         } else {
             for(int i=0; i < (size/8)+1; i++){
-                code += "MOVS R1, "+i+"\nLV R2, R1\nNOP\nXORVS R3, R2, R2\nSV R3, R1\n";
+                String shift;
+                if(dir.compareTo("derecha") == 0) {
+                    shift = "SHIFTCR";
+                }else {
+                    shift = "SHIFTCL";
+                }
+                code += "MOVS R1, "+i+"\nLV R2, R1\nNOP\n"+shift+" R3, "+shamt+"(R2)\nSV R3, R1\n";
             }
         }
         return code;
@@ -119,17 +120,26 @@ public class CodeAndImageManager {
         return code;
     }
     
-    public String getAlgorithADD() {
+    public String getAlgorithADD(int[] vector) {
         int size = imageActual.getWidth() * imageActual.getHeight();
-        String code = "MOVS R2, 1000";
+        System.out.println(size);
+        String code = "MOVS R2, 0\nMOVS R3, "+vector[0]+"\nMOVS R4, "+vector[1]+
+                      "\nSS R3, R2\nMOVS R2, 1\nSS R4, R2\nMOVS R2, 2"+
+                      "\nMOVS R5, "+vector[2]+"\nMOVS R6, "+vector[3]+
+                      "\nSS R5, R2\nMOVS R2, 3\nSS R5, R2\nMOVS R2, 4"+
+                      "\nMOVS R3, "+vector[4]+"\nMOVS R4, "+vector[5]+
+                      "\nSS R3, R2\nMOVS R2, 5\nSS R4, R2\nMOVS R2, 6"+
+                      "\nMOVS R5, "+vector[6]+"\nMOVS R6, "+vector[7]+
+                      "\nSS R5, R2\nMOVS R2, 7\nSS R5, R2\nMOVS R2, 0\nLV R0, R2\n";
+
         
         if((size % 8) == 0){
             for(int i=0; i < size/8; i++){
-                code += "MOVS R1, "+i+"\nLV R2, R1\nNOP\nADDVV R4, R2, R3\nSV R4, R1\n";
+                code += "MOVS R1, "+(i+8)+"\nLV R2, R1\nNOP\nADDVV R4, R2, R0\nSV R4, R1\n";
             }
         } else {
             for(int i=0; i < (size/8)+1; i++){
-                code += "MOVS R1, "+i+"\nLV R2, R1\nNOP\nADDVV R4, R2, R3\nSV R4, R1\n";
+                code += "MOVS R1, "+(i+8)+"\nLV R2, R1\nNOP\nADDVV R4, R2, R0\nSV R4, R1\n";
             }
         }
         return code;

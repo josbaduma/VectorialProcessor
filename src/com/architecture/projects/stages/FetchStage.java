@@ -9,17 +9,17 @@
 /**********************************************/
 package com.architecture.projects.stages;
 
-import com.architecture.projects.components.Clock;
 import com.architecture.projects.components.InstructionMemory;
 import com.architecture.projects.utilities.Utility;
 import java.util.Observable;
-import java.util.Observer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author jose
  */
-public class FetchStage extends Observable implements Observer, Runnable {
+public class FetchStage extends Observable implements Runnable {
 
     private Thread t;
     private final String threadName;
@@ -27,22 +27,15 @@ public class FetchStage extends Observable implements Observer, Runnable {
     private String pc;
     private final InstructionMemory instructionMemory;
     private static FetchStage instance;
-    private final Clock clockInstance;
-    private boolean clock;
-    private final int numInstruction;
+    private int numInstruction;
     private int countInstruction;
 
     public FetchStage() {
-
         threadName = "InstructionFetchStage";
         pc = "0000000000000000";
-        instructionFetched = "00000000000000000000000000000000";
-        clockInstance = Clock.getInstance();
-        clockInstance.addObserver(this);
-        clock = false;
+
         instructionMemory = InstructionMemory.getInstance();
-        numInstruction = instructionMemory.getInstructions().size();
-        countInstruction = 0;
+        numInstruction = 10;
     }
 
     /**
@@ -63,49 +56,49 @@ public class FetchStage extends Observable implements Observer, Runnable {
 
     @Override
     public void run() {
-        while (countInstruction < numInstruction) {
-            if(clock){
-                long startTime = System.nanoTime();
+        while ((countInstruction < numInstruction)) {
 
-                instructionFetched = instructionMemory.readInstruction(pc);
+            instructionFetched = instructionMemory.readInstruction(pc);
 
-                int number0 = Utility.binaryToDecimal(pc);
+            int number0 = Utility.binaryToDecimal(pc);
 
-                int sum = number0 + 1;
-                pc = Utility.decimalToBinary(sum);
-                
-                countInstruction++;
+            int sum = number0 + 1;
+            pc = Utility.decimalToBinary(sum);
 
-                long endTime = System.nanoTime();
-                long totalTime = (endTime - startTime) / 1000;
-                System.out.println("Tiempo ejecución Fetch: " + totalTime + " us");
+            countInstruction++;
+            System.out.println("Fetch output: "+instructionFetched);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(FetchStage.class.getName()).log(Level.SEVERE, null, ex);
             }
+
+            setChanged();
+            notifyObservers();
         }
     }
 
     /**
      * Punto de entrada del thread.
+     * @param numInst
      */
-    public void start() {
+    public void start(int numInst) {
 
-        if (t == null) {
-            t = new Thread(this, threadName);
-            t.start();
-        }
+        countInstruction = 0;
+        numInstruction = numInst;
+        pc = "0000000000000000";
+        instructionFetched = "00000000000000000000000000000000";
+        t = new Thread(this, threadName);
+        t.start();
     }
+    
 
     /**
      * Se retorna el resultado de la instruccion
      *
      * @return
      */
-    public String getInstructionFetched() {        
+    public String getInstructionFetched() {
         return instructionFetched;
     }
-
-    @Override
-    public void update(Observable o, Object arg) {
-        this.clock = clockInstance.isClock();
-    }
-
 }

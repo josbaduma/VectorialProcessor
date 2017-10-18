@@ -9,11 +9,13 @@
 /*********************************************/
 package com.architecture.projects.stages;
 
-import com.architecture.projects.components.Clock;
 import com.architecture.projects.components.DataMemory;
+import com.architecture.projects.components.InstructionMemory;
 import com.architecture.projects.utilities.Utility;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -22,13 +24,15 @@ import java.util.Observer;
 public class MemoryStage extends Observable implements Runnable, Observer {
     
     private static MemoryStage instance;
-    private ExecutionStage execution;
+    private final ExecutionStage execution;
     private final DataMemory dataMem;
     private Thread t;
     private final String threadName;
-    
-    private final Clock clockInstance;
     private boolean clock;
+    
+    private final InstructionMemory instructionMemory;
+    private int numInstruction;
+    private int countInstruction;
     
     private String opType;
     private String opCode;
@@ -41,20 +45,12 @@ public class MemoryStage extends Observable implements Runnable, Observer {
         this.threadName = "MemoryStage";
         this.dataMem = DataMemory.getInstance();
         execution = ExecutionStage.getInstance();
-        clockInstance = Clock.getInstance();
-        clockInstance.addObserver(this);
-        clock = false;
+        execution.addObserver(this);
         
-        this.opType = "000";
-        this.opCode = "000";
-        this.destiny = "0000";
-        
-        this.resultScalar = "00000000000000000000000000000000";
+        instructionMemory = InstructionMemory.getInstance();
+        numInstruction = 10;
         this.resultVector = new String[8];
-        for(int i=0; i<8; i++){
-            this.resultVector[i] = "00000000";
-        }
-        this.execution = ExecutionStage.getInstance();
+
     }
     
     public static MemoryStage getInstance() {
@@ -64,20 +60,38 @@ public class MemoryStage extends Observable implements Runnable, Observer {
         return instance;
     }
     
-    public void start() {
-        if (t == null) {
-            t = new Thread(this, threadName);
-            t.start();
+    public void start(int numInst) {
+        clock = false;
+        countInstruction = 0;
+        numInstruction = numInst;
+
+        this.opType = "000";
+        this.opCode = "000";
+        this.destiny = "0000";
+
+        this.resultScalar = "00000000000000000000000000000000";
+
+        for (int i = 0; i < 8; i++) {
+            this.resultVector[i] = "00000000";
         }
+
+        t = new Thread(this, threadName);
+        t.start();
+
     }
 
     @Override
     public void run() {
-        while(true) {
+        while(countInstruction < numInstruction) {
+            try {
+                synchronized (this) {
+                    this.wait();
+                }
+            } catch (InterruptedException ie) {
+            }
             if(clock) {
-                long startTime = System.nanoTime();
 
-                if(this.opType.compareTo("010") == 0){
+                if(this.opType.compareTo("011") == 0){
                     if(this.opCode.compareTo("001") == 0) {
                         int tempDest = Utility.binaryToDecimal(destiny);
                         this.dataMem.writeMemory(Utility.decimalToBinary(tempDest), resultVector[0]);
@@ -103,17 +117,29 @@ public class MemoryStage extends Observable implements Runnable, Observer {
                     } else if(this.opCode.compareTo("010") == 0){
                         resultScalar = this.dataMem.readMemory(destiny);
                     }
-                }        
-                long endTime   = System.nanoTime();
-                long totalTime = (endTime - startTime)/1000;
-                System.out.println("Tiempo ejecución Memory: "+totalTime+" us");
+                }     
+                
+                System.out.println("Memory Output: Result Scalar "+resultScalar+"\n"+
+                            "resultVector" + resultVector[0] + " " + resultVector[1] + " " + resultVector[2] + " " + resultVector[3] + " "
+                                           + resultVector[4] + " " + resultVector[5] + " " + resultVector[6] + " " + resultVector[7]);
+                countInstruction++;
+                clock = false;
+                
+                try {
+                    Thread.sleep(85);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(MemoryStage.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                
+                setChanged();
+                notifyObservers();
             }
         }
     }
 
     @Override
     public void update(Observable o, Object arg) {
-        this.clock = clockInstance.isClock();
+        this.clock = true;
         
         this.opType = execution.getOpType();
         this.opCode = execution.getOpCode();
@@ -121,6 +147,11 @@ public class MemoryStage extends Observable implements Runnable, Observer {
         
         this.resultScalar = execution.getResultScalar();
         this.resultVector = execution.getResultVector();
+        
+        synchronized(this)
+        {
+            this.notify();
+        }
     }
 
     public String getOpType() {

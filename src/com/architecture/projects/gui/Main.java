@@ -15,9 +15,18 @@ import com.architecture.projects.stages.FetchStage;
 import com.architecture.projects.stages.MemoryStage;
 import com.architecture.projects.stages.WriteBackStage;
 import com.architecture.projects.utilities.Utility;
+import com.architecture.projects.compiler.Compiler;
+import com.architecture.projects.utilities.CodeAndImageManager;
+import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Observable;
 import java.util.Observer;
+import javax.imageio.ImageIO;
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  *
@@ -35,23 +44,20 @@ public class Main extends javax.swing.JFrame implements Observer {
         fetch.addObserver(this);
         
         decode = DecodeStage.getInstance();
-        decode.addObserver(this);
         
         execute = ExecutionStage.getInstance();
-        execute.addObserver(this);
         
         memory = MemoryStage.getInstance();
-        memory.addObserver(this);
         
         writeBack = WriteBackStage.getInstance();
-        writeBack.addObserver(this);
         
         vectorReg = VectorRegisters.getInstance();
         scalarReg = ScalarRegisters.getInstance();
         mem = DataMemory.getInstance();
+        mem.addObserver(this);
         memInst = InstructionMemory.getInstance();
-        memInst.addObserver(this);
-        instructions = memInst.getInstructions();
+        numInstructions = 0;
+        manager = new CodeAndImageManager();
         
         initComponents();
     }
@@ -72,7 +78,7 @@ public class Main extends javax.swing.JFrame implements Observer {
         stepButton = new javax.swing.JButton();
         restartButton = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTextPane1 = new javax.swing.JTextPane();
+        codeText = new javax.swing.JTextPane();
         tabPane = new javax.swing.JTabbedPane();
         jLabel1 = new javax.swing.JLabel();
         jScrollPane4 = new javax.swing.JScrollPane();
@@ -83,12 +89,11 @@ public class Main extends javax.swing.JFrame implements Observer {
         regVectorText = new javax.swing.JTextArea();
         jScrollPane3 = new javax.swing.JScrollPane();
         regScalarText = new javax.swing.JTextArea();
+        jButton1 = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
-        imagentem = new javax.swing.JMenuItem();
         codigoItem = new javax.swing.JMenuItem();
-        limpiarItem = new javax.swing.JMenuItem();
-        salirItem = new javax.swing.JMenuItem();
+        loadImageItem = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Vector Processor");
@@ -107,6 +112,11 @@ public class Main extends javax.swing.JFrame implements Observer {
         playButton.setFocusable(false);
         playButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         playButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        playButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                playButtonActionPerformed(evt);
+            }
+        });
         toolBar.add(playButton);
 
         stepButton.setText("Step");
@@ -121,9 +131,9 @@ public class Main extends javax.swing.JFrame implements Observer {
         restartButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         toolBar.add(restartButton);
 
-        jTextPane1.setMaximumSize(new java.awt.Dimension(270, 640));
-        jTextPane1.setMinimumSize(new java.awt.Dimension(270, 640));
-        jScrollPane1.setViewportView(jTextPane1);
+        codeText.setMaximumSize(new java.awt.Dimension(270, 640));
+        codeText.setMinimumSize(new java.awt.Dimension(270, 640));
+        jScrollPane1.setViewportView(codeText);
 
         tabPane.setPreferredSize(new java.awt.Dimension(1080, 640));
 
@@ -154,10 +164,14 @@ public class Main extends javax.swing.JFrame implements Observer {
 
         tabPane.addTab("Registros Escalares", jScrollPane3);
 
-        jMenu1.setText("Archivo");
+        jButton1.setText("Compilar");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
-        imagentem.setText("Cargar Imagen");
-        jMenu1.add(imagentem);
+        jMenu1.setText("Archivo");
 
         codigoItem.setText("Cargar Código");
         codigoItem.addActionListener(new java.awt.event.ActionListener() {
@@ -167,11 +181,13 @@ public class Main extends javax.swing.JFrame implements Observer {
         });
         jMenu1.add(codigoItem);
 
-        limpiarItem.setText("Limpiar Procesador");
-        jMenu1.add(limpiarItem);
-
-        salirItem.setText("Salir");
-        jMenu1.add(salirItem);
+        loadImageItem.setText("Cargar Imagen a Memoria");
+        loadImageItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                loadImageItemActionPerformed(evt);
+            }
+        });
+        jMenu1.add(loadImageItem);
 
         jMenuBar1.add(jMenu1);
 
@@ -187,15 +203,16 @@ public class Main extends javax.swing.JFrame implements Observer {
                 .addComponent(tabPane, javax.swing.GroupLayout.PREFERRED_SIZE, 1080, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 15, Short.MAX_VALUE)
                         .addComponent(pcLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(pcValue)
-                        .addGap(124, 124, 124))
+                        .addGap(22, 22, 22)
+                        .addComponent(jButton1))
                     .addGroup(layout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 270, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 270, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -204,22 +221,103 @@ public class Main extends javax.swing.JFrame implements Observer {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
+                        .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addContainerGap())
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 640, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(pcLabel)
-                            .addComponent(pcValue))
-                        .addGap(0, 10, Short.MAX_VALUE))
-                    .addComponent(tabPane, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(pcLabel)
+                                    .addComponent(pcValue))
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addComponent(jButton1))))))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void codigoItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_codigoItemActionPerformed
-        // TODO add your handling code here:
+        JFileChooser selector = new JFileChooser();
+        selector.setDialogTitle("Seleccione un archivo de texto");
+        FileNameExtensionFilter filtroTXT = new FileNameExtensionFilter("TXT", "txt");
+        selector.setFileFilter(filtroTXT);
+        int flag=selector.showOpenDialog(null);
+        FileReader fr = null;
+        BufferedReader br = null;
+        String txt = "";
+        
+        if(flag==JFileChooser.APPROVE_OPTION){
+            try {
+                //Devuelve el fichero seleccionado
+                File file = selector.getSelectedFile();
+                //Asignamos a la variable bmp la imagen leida
+                
+                
+                fr = new FileReader (file);
+                br = new BufferedReader(fr);
+                
+                String linea;
+                while((linea=br.readLine())!=null){
+                    txt += linea+"\n";
+                }
+            } catch (Exception e) {
+            }
+        }
+        codeText.setText(txt);
     }//GEN-LAST:event_codigoItemActionPerformed
+
+    private void playButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playButtonActionPerformed
+        writeBack.start(numInstructions);
+        memory.start(numInstructions);
+        execute.start(numInstructions);
+        decode.start(numInstructions);
+        fetch.start(numInstructions);
+    }//GEN-LAST:event_playButtonActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        String code = codeText.getText();
+
+        if (code.equals("")) {
+            return;
+        }
+
+        Compiler compiler = new Compiler(code);
+
+        ArrayList<String> inst = compiler.compile();
+        memInst.setPointer(0);
+        String instructionText = "";
+        for (String instruction : inst) {
+            memInst.addInstruction(instruction);
+            instructionText = instructionText + instruction +"\n";
+            numInstructions++;
+        }
+        this.memInstructionText.setText(instructionText);
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void loadImageItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadImageItemActionPerformed
+        BufferedImage bmp = null;
+        JFileChooser selector = new JFileChooser();
+        selector.setDialogTitle("Seleccione una imagen");
+        FileNameExtensionFilter filtroImagen = new FileNameExtensionFilter("JPG & GIF & BMP", "jpg", "gif", "bmp");
+        selector.setFileFilter(filtroImagen);
+        int flag=selector.showOpenDialog(null);
+        if(flag==JFileChooser.APPROVE_OPTION){
+            try {
+                //Devuelve el fichero seleccionado
+                File imagenSeleccionada=selector.getSelectedFile();
+                //Asignamos a la variable bmp la imagen leida
+                bmp = ImageIO.read(imagenSeleccionada);
+            } catch (Exception e) {
+            }
+        }
+        manager.getImage(bmp);
+        String[] dataMem = manager.getPixelToMemory();
+        mem.setDataMemory(dataMem);
+        
+    }//GEN-LAST:event_loadImageItemActionPerformed
 
     /**
      * @param args the command line arguments
@@ -256,14 +354,24 @@ public class Main extends javax.swing.JFrame implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
+        
         this.pcValue.setText(Utility.zeroExtends(this.fetch.getPC(), 16));
         
-        String instructionText = "";
-        for(int i=0; i<this.instructions.size(); i++) {
-            instructionText = instructionText + this.instructions.get(i) +"\n";
+        String dataText = "";
+        for(int i=0; i < mem.getDataMemory().size(); i++){
+                dataText += mem.getDataMemory().get(i) +"\n";
         }
-        this.memInstructionText.setText(instructionText);
-                
+        this.memDataText.setText(dataText);
+        
+        String regScalar = "R0  " + scalarReg.getRegisters().get(0) +
+                "R1  " + scalarReg.getRegisters().get(1) + "\n"+
+                "R2  " + scalarReg.getRegisters().get(2) + "\n"+
+                "R3  " + scalarReg.getRegisters().get(3) + "\n"+
+                "R4  " + scalarReg.getRegisters().get(4) + "\n"+
+                "R5  " + scalarReg.getRegisters().get(5) + "\n"+
+                "R6  " + scalarReg.getRegisters().get(6) + "\n"+
+                "R7  " + scalarReg.getRegisters().get(7);
+        regScalarText.setText(regScalar);
     }
 
     //Internal vector processor variables
@@ -275,13 +383,15 @@ public class Main extends javax.swing.JFrame implements Observer {
     
     private DataMemory mem;
     private final InstructionMemory memInst;
-    private final ArrayList<String> instructions;
     private VectorRegisters vectorReg;
     private ScalarRegisters scalarReg;
+    private int numInstructions;
+    private CodeAndImageManager manager;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JTextPane codeText;
     private javax.swing.JMenuItem codigoItem;
-    private javax.swing.JMenuItem imagentem;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
@@ -290,8 +400,7 @@ public class Main extends javax.swing.JFrame implements Observer {
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
-    private javax.swing.JTextPane jTextPane1;
-    private javax.swing.JMenuItem limpiarItem;
+    private javax.swing.JMenuItem loadImageItem;
     private javax.swing.JTextArea memDataText;
     private javax.swing.JTextArea memInstructionText;
     private javax.swing.JLabel pcLabel;
@@ -300,7 +409,6 @@ public class Main extends javax.swing.JFrame implements Observer {
     private javax.swing.JTextArea regScalarText;
     private javax.swing.JTextArea regVectorText;
     private javax.swing.JButton restartButton;
-    private javax.swing.JMenuItem salirItem;
     private javax.swing.JButton stepButton;
     private javax.swing.JTabbedPane tabPane;
     private javax.swing.JToolBar toolBar;

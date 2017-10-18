@@ -10,9 +10,11 @@
 package com.architecture.projects.stages;
 
 import com.architecture.projects.components.ALU;
-import com.architecture.projects.components.Clock;
+import com.architecture.projects.components.InstructionMemory;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -32,6 +34,10 @@ public class ExecutionStage extends Observable implements Runnable, Observer {
     private final ALU alu6;
     private final ALU alu7;
     private final ALU alu8;
+    
+    private final InstructionMemory instructionMemory;
+    private int numInstruction;
+    private int countInstruction;
 
     private String opType;
     private String opCode;
@@ -43,15 +49,15 @@ public class ExecutionStage extends Observable implements Runnable, Observer {
     private String scalarA, scalarB;
     private String resultScalar;
     private String immediate;
-    private final Clock clockInstance;
     private boolean clock;
 
     public ExecutionStage() {
         this.threadName = "ExecutionStage";
-        clockInstance = Clock.getInstance();
-        clockInstance.addObserver(this);
-        clock = false;
         decode = DecodeStage.getInstance();
+        decode.addObserver(this);
+        
+        instructionMemory = InstructionMemory.getInstance();
+        numInstruction = 10;
 
         this.alu1 = new ALU();
         this.alu2 = new ALU();
@@ -62,14 +68,27 @@ public class ExecutionStage extends Observable implements Runnable, Observer {
         this.alu7 = new ALU();
         this.alu8 = new ALU();
 
+        this.vectorA = new String[8];
+        this.vectorB = new String[8];
+        this.resultVector = new String[8];
+    }
+
+    public static ExecutionStage getInstance() {
+        if (instance == null) {
+            instance = new ExecutionStage();
+        }
+        return instance;
+    }
+
+    public void start(int numInst) {
+        clock = false;
+        countInstruction = 0;
+        numInstruction = numInst;
+
         this.opType = "000";
         this.opCode = "000";
         this.type = "00";
         this.destiny = "0000";
-
-        this.vectorA = new String[8];
-        this.vectorB = new String[8];
-        this.resultVector = new String[8];
 
         for (int i = 0; i < 8; i++) {
             this.vectorA[i] = "00000000";
@@ -81,28 +100,21 @@ public class ExecutionStage extends Observable implements Runnable, Observer {
         this.scalarA = "000000000000000000000000000000000000";
         this.scalarB = "000000000000000000000000000000000000";
         this.resultScalar = "000000000000000000000000000000000000";
+        t = new Thread(this, threadName);
+        t.start();
 
-    }
-
-    public static ExecutionStage getInstance() {
-        if (instance == null) {
-            instance = new ExecutionStage();
-        }
-        return instance;
-    }
-
-    public void start() {
-        if (t == null) {
-            t = new Thread(this, threadName);
-            t.start();
-        }
     }
 
     @Override
     public void run() {
-        while (true) {
+        while (countInstruction < numInstruction) {
+            try {
+                synchronized (this) {
+                    this.wait();
+                }
+            } catch (InterruptedException ie) {
+            }
             if (clock) {
-                long startTime = System.nanoTime();
                 switch (type) {
                     case "00":
                         resultVector[0] = alu1.operation(opType, opCode, vectorA[0], vectorB[0], immediate);
@@ -124,28 +136,28 @@ public class ExecutionStage extends Observable implements Runnable, Observer {
                         resultVector[6] = alu7.operation(opType, opCode, vectorA[6], scalarB, immediate);
                         resultVector[7] = alu8.operation(opType, opCode, vectorA[7], scalarB, immediate);
                         break;
-                    case "10":
-                        resultVector[0] = alu1.operation(opType, opCode, scalarA, vectorB[0], immediate);
-                        resultVector[1] = alu2.operation(opType, opCode, scalarA, vectorB[1], immediate);
-                        resultVector[2] = alu3.operation(opType, opCode, scalarA, vectorB[2], immediate);
-                        resultVector[3] = alu4.operation(opType, opCode, scalarA, vectorB[3], immediate);
-                        resultVector[4] = alu5.operation(opType, opCode, scalarA, vectorB[4], immediate);
-                        resultVector[5] = alu6.operation(opType, opCode, scalarA, vectorB[5], immediate);
-                        resultVector[6] = alu7.operation(opType, opCode, scalarA, vectorB[6], immediate);
-                        resultVector[7] = alu8.operation(opType, opCode, scalarA, vectorB[7], immediate);
-                        break;
                 }
                 resultScalar = resultVector[0];
-                long endTime = System.nanoTime();
-                long totalTime = (endTime - startTime) / 1000;
-                System.out.println("Tiempo ejecución Execution: " + totalTime + " us");
+                countInstruction++;
+                clock = false;
+                
+                System.out.println("Execution output: " + resultVector[0] + " " + resultVector[1] + " " + resultVector[2] + " " + resultVector[3] + " "
+                                + resultVector[4] + " " + resultVector[5] + " " + resultVector[6] + " " + resultVector[7]);
+                try {
+                    Thread.sleep(90);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(ExecutionStage.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                
+                setChanged();
+                notifyObservers();
             }
         }
     }
 
     @Override
     public void update(Observable o, Object arg) {
-        clock = clockInstance.isClock();
+        clock = true;
         
         this.opType = decode.getOpType();
         this.opCode = decode.getOpCode();
@@ -159,6 +171,11 @@ public class ExecutionStage extends Observable implements Runnable, Observer {
 
         this.immediate = decode.getInmediate();
         this.destiny = decode.getDestiny();
+        
+        synchronized(this)
+        {
+            this.notify();
+        }
     }
 
     public String getOpType() {

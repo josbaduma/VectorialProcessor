@@ -83,6 +83,10 @@ public class ScalarRegisters extends Observable {
                 value = registers.get(7);
                 break;
         }
+        
+        setChanged();
+        notifyObservers();
+        
         return value;
     }
 

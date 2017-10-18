@@ -11,13 +11,12 @@ package com.architecture.projects.components;
 
 import com.architecture.projects.utilities.Utility;
 import java.util.ArrayList;
-import java.util.Observable;
 
 /**
  *
  * @author jose
  */
-public class InstructionMemory extends Observable {
+public class InstructionMemory {
     private final ArrayList<String> instructions;
     private static InstructionMemory instance = null;
     private int pointer;
@@ -31,13 +30,9 @@ public class InstructionMemory extends Observable {
         instructions = new ArrayList();
         pointer = 0;
         
-        for (int i = 0; i < 65536; i++) {
+        for (int i = 0; i < 16384; i++) {
             instructions.add("00000000000000000000000000000000");
-        }
-        
-        this.setChanged();
-        this.notifyObservers();
-        
+        }        
     }
 
     /**

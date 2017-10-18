@@ -9,11 +9,13 @@
 /**********************************************/
 package com.architecture.projects.stages;
 
-import com.architecture.projects.components.Clock;
+import com.architecture.projects.components.InstructionMemory;
 import com.architecture.projects.components.ScalarRegisters;
 import com.architecture.projects.components.VectorRegisters;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -25,13 +27,16 @@ public class WriteBackStage extends Observable implements Runnable, Observer {
     private final MemoryStage memStage;
     private Thread t;
     private final String threadName;
-    private final Clock clockInstance;
     private boolean clock;
+    
+    private final InstructionMemory instructionMemory;
+    private int numInstruction;
+    private int countInstruction;
 
     private final ScalarRegisters scalarReg;
     private final VectorRegisters vectorReg;
+    private String opType;
     private String opCode;
-    private String encode;
     private String[] resultVector;
     private String regDest;
     private String resultScalar;
@@ -40,21 +45,14 @@ public class WriteBackStage extends Observable implements Runnable, Observer {
         this.threadName = "WriteBackStage";
         this.scalarReg = ScalarRegisters.getInstance();
         this.vectorReg = VectorRegisters.getInstance();
-
-        clockInstance = Clock.getInstance();
-        clockInstance.addObserver(this);
-        clock = false;
+        
+        instructionMemory = InstructionMemory.getInstance();
+        numInstruction = 10;
 
         this.memStage = MemoryStage.getInstance();
+        this.memStage.addObserver(this);
 
-        this.opCode = "000";
-        this.encode = "000";
-        this.regDest = "0000";
-        this.resultScalar = "00000000000000000000000000000000";
         this.resultVector = new String[8];
-        for (int i = 0; i < 8; i++) {
-            this.resultVector[i] = "00000000";
-        }
     }
 
     public static WriteBackStage getInstance() {
@@ -64,48 +62,76 @@ public class WriteBackStage extends Observable implements Runnable, Observer {
         return instance;
     }
 
-    public void start() {
-        if (t == null) {
-            t = new Thread(this, threadName);
-            t.start();
+    public void start(int numInst) {
+        countInstruction = 0;
+        numInstruction = numInst;
+        clock = false;
+
+        this.opType = "000";
+        this.opCode = "000";
+        this.regDest = "0000";
+        this.resultScalar = "00000000000000000000000000000000";
+        
+        for (int i = 0; i < 8; i++) {
+            this.resultVector[i] = "00000000";
         }
+
+        t = new Thread(this, threadName);
+        t.start();
     }
 
     @Override
     public void run() {
-        while (true) {
+        while (countInstruction < numInstruction) {
+            try {
+                synchronized (this) {
+                    this.wait();
+                }
+            } catch (InterruptedException ie) {
+            }
             if (clock) {
                 long startTime = System.nanoTime();
 
-                if (this.opCode.compareTo("011") == 0) {
-                    if (this.encode.compareTo("000") == 0) {
+                if (this.opType.compareTo("011") == 0) {
+                    if (this.opCode.compareTo("000") == 0) {
                         this.vectorReg.writeAddress(this.regDest, resultVector);
-                    } else if (this.encode.compareTo("010") == 0) {
+                    } else if (this.opCode.compareTo("010") == 0) {
                         this.scalarReg.writeAddress(regDest, resultScalar);
-                    } else {
-                        System.out.println("Store Registers");
                     }
                 } else {
                     this.vectorReg.writeAddress(this.regDest, resultVector);
                 }
-
-                long endTime = System.nanoTime();
-                long totalTime = (endTime - startTime) / 1000;
-                System.out.println("Tiempo ejecución WriteBack: " + totalTime + " us");
+                
+                System.out.println("Write Back output");
+                clock = false;
+                countInstruction++;
+                
+                try {
+                    Thread.sleep(80);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(WriteBackStage.class.getName()).log(Level.SEVERE, null, ex);
+                }                
+                
+                setChanged();
+                notifyObservers();
             }
         }
     }
 
     @Override
     public void update(Observable o, Object arg) {
-        this.clock = clockInstance.isClock();
+        this.clock = true;
 
-        this.opCode = memStage.getOpType();
-        this.encode = memStage.getOpCode();
+        this.opType = memStage.getOpType();
+        this.opCode = memStage.getOpCode();
         this.regDest = memStage.getDestiny();
 
         this.resultScalar = memStage.getResultScalar();
         this.resultVector = memStage.getResultVector();
+        synchronized(this)
+        {
+            this.notify();
+        }
     }
 
 }

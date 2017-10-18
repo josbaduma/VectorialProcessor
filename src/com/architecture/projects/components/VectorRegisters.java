@@ -5,11 +5,13 @@
  */
 package com.architecture.projects.components;
 
+import java.util.Observable;
+
 /**
  *
  * @author jose
  */
-public class VectorRegisters {
+public class VectorRegisters extends Observable {
     
     private String[] register_1;
     private String[] register_2;
@@ -43,6 +45,9 @@ public class VectorRegisters {
             register_7[i] = "00000000";
             register_8[i] = "00000000";
         }
+        
+        setChanged();
+        notifyObservers();
     }
     
     public static VectorRegisters getInstance() {
@@ -89,6 +94,10 @@ public class VectorRegisters {
                 value = register_8;
                 break;
         }
+        
+        setChanged();
+        notifyObservers();
+        
         return value;
     }
 
@@ -127,5 +136,8 @@ public class VectorRegisters {
                 register_8 = value;
                 break;
         }
+        
+        setChanged();
+        notifyObservers();
     }    
 }
